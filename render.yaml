@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: milk-tracker
-    runtime: node
-    buildCommand: ""
-    startCommand: node server.js
-    envVars:
-      - key: PORT
-        value: 3000
