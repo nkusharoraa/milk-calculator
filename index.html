@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milk Tracker</title>
+  <meta name="description" content="Track daily milk consumption and calculate monthly costs">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Milk Tracker">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --bg-card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --primary: #1e40af;
+      --primary-light: #dbeafe;
+      --accent: #059669;
+      --accent-light: #d1fae5;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --radius: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f172a;
+        --bg-card: #1e293b;
+        --text: #f1f5f9;
+        --text-muted: #94a3b8;
+        --primary: #3b82f6;
+        --primary-light: #1e3a5f;
+        --accent: #34d399;
+        --accent-light: #064e3b;
+        --danger: #f87171;
+        --danger-light: #450a0a;
+        --border: #334155;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-light: #1e3a5f;
+      --accent: #34d399;
+      --accent-light: #064e3b;
+      --danger: #f87171;
+      --danger-light: #450a0a;
+      --border: #334155;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 16px 80px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      padding: 16px 0 12px;
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .price-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+    }
+
+    .price-bar label { font-weight: 600; white-space: nowrap; }
+
+    .price-bar input {
+      width: 90px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .price-bar .currency {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin: 16px 0 12px;
+      background: var(--bg-card);
+      padding: 4px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      width: 100%;
+    }
+
+    .btn:active { opacity: 0.8; }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .stat .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .entry-list { list-style: none; }
+
+    .entry-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .entry-item:last-child { border-bottom: none; }
+
+    .entry-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .entry-volume {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .entry-cost {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon.edit { background: var(--primary-light); color: var(--primary); }
+    .btn-icon.delete { background: var(--danger-light); color: var(--danger); }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-row select, .filter-row input {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      background: var(--bg);
+      color: var(--text);
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: 16px 16px 0 0;
+      padding: 20px 16px 32px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+    }
+
+    .reset-option {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .reset-option:hover { background: var(--danger-light); }
+
+    .reset-option .title { font-weight: 600; font-size: 0.9rem; }
+    .reset-option .desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 16px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 10;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-btn.active { color: var(--primary); }
+    .nav-btn .nav-icon { font-size: 1.2rem; }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; }
+
+    @media (min-width: 480px) {
+      body { max-width: 480px; margin: 0 auto; }
+      .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Milk Tracker</h1>
+    <div class="price-bar">
+      <label>Price per liter:</label>
+      <span class="currency">&#8377;</span>
+      <input type="number" id="priceInput" min="0" step="0.5" placeholder="e.g. 60">
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="add" onclick="switchTab('add')">Add</button>
+    <button class="tab" data-tab="history" onclick="switchTab('history')">History</button>
+    <button class="tab" data-tab="summary" onclick="switchTab('summary')">Summary</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+  </div>
+
+  <!-- Add Entry Tab -->
+  <section id="tab-add">
+    <div class="card">
+      <h2>Add Milk Entry</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="entryDate">
+        </div>
+        <div class="form-group">
+          <label>Volume (liters)</label>
+          <input type="number" id="entryVolume" min="0.1" step="0.1" placeholder="e.g. 1.5">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Note (optional)</label>
+        <input type="text" id="entryNote" placeholder="e.g. Morning delivery">
+      </div>
+      <button class="btn btn-primary" onclick="addEntry()">Add Entry</button>
+    </div>
+
+    <!-- Quick summary for today -->
+    <div class="card" id="todaySummary">
+      <h2>Today's Summary</h2>
+      <div class="summary-grid">
+        <div class="stat">
+          <div class="value" id="todayLiters">0</div>
+          <div class="label">Liters today</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="todayCost">&#8377;0</div>
+          <div class="label">Cost today</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- History Tab -->
+  <section id="tab-history" style="display:none">
+    <div class="card">
+      <h2>Filters</h2>
+      <div class="filter-row">
+        <select id="filterMonth" onchange="renderHistory()">
+          <option value="">All months</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <input type="date" id="filterFrom" onchange="renderHistory()" placeholder="From">
+        <input type="date" id="filterTo" onchange="renderHistory()" placeholder="To">
+      </div>
+      <div class="filter-row">
+        <input type="number" id="filterMinL" min="0" step="0.1" placeholder="Min L" onchange="renderHistory()">
+        <input type="number" id="filterMaxL" min="0" step="0.1" placeholder="Max L" onchange="renderHistory()">
+      </div>
+    </div>
+    <div class="card">
+      <h2>Entries</h2>
+      <ul class="entry-list" id="entryList"></ul>
+    </div>
+  </section>
+
+  <!-- Summary Tab -->
+  <section id="tab-summary" style="display:none">
+    <div class="card">
+      <h2>Monthly Summary</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Select Month</label>
+          <select id="summaryMonth" onchange="renderSummary()"></select>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="stat">
+          <div class="value" id="sumLiters">0</div>
+          <div class="label">Total liters</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="sumCost">&#8377;0</div>
+          <div class="label">Total cost</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="sumEntries">0</div>
+          <div class="label">Entries</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="sumAvg">0</div>
+          <div class="label">Avg L/day</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="monthBreakdown">
+      <h2>Daily Breakdown</h2>
+      <ul class="entry-list" id="breakdownList"></ul>
+    </div>
+  </section>
+
+  <!-- Settings Tab -->
+  <section id="tab-settings" style="display:none">
+    <div class="card">
+      <h2>Price Settings</h2>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Price per liter (&#8377;)</label>
+        <input type="number" id="settingsPrice" min="0" step="0.5" placeholder="e.g. 60">
+      </div>
+      <button class="btn btn-primary" onclick="savePrice()">Save Price</button>
+    </div>
+
+    <div class="card">
+      <h2>Reset Data</h2>
+      <div class="reset-option" onclick="showResetModal()">
+        <div class="title">Reset Options</div>
+        <div class="desc">Clear entries for a specific month or all data</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Add to Home Screen</h2>
+      <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5">
+        To add this app to your Android home screen: tap the browser menu (three dots) and select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>. The app will open full-screen like a native app.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Export Data</h2>
+      <button class="btn btn-outline" onclick="exportData()">Download as JSON</button>
+    </div>
+  </section>
+
+  <!-- Reset Modal -->
+  <div class="modal-backdrop" id="resetModal">
+    <div class="modal">
+      <h3>Reset Data</h3>
+      <div id="resetOptions"></div>
+      <button class="btn btn-outline" onclick="closeResetModal()" style="margin-top:8px">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal">
+      <h3>Edit Entry</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="editDate">
+        </div>
+        <div class="form-group">
+          <label>Volume (liters)</label>
+          <input type="number" id="editVolume" min="0.1" step="0.1">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Note (optional)</label>
+        <input type="text" id="editNote">
+      </div>
+      <input type="hidden" id="editId">
+      <button class="btn btn-primary" onclick="saveEdit()" style="margin-bottom:8px">Save</button>
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="add" onclick="switchTab('add')">
+      <span class="nav-icon">+</span> Add
+    </button>
+    <button class="nav-btn" data-tab="history" onclick="switchTab('history')">
+      <span class="nav-icon">&#9776;</span> History
+    </button>
+    <button class="nav-btn" data-tab="summary" onclick="switchTab('summary')">
+      <span class="nav-icon">&#9733;</span> Summary
+    </button>
+    <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">
+      <span class="nav-icon">&#9881;</span> Settings
+    </button>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = 'milk_tracker_data';
+    const PRICE_KEY = 'milk_tracker_price';
+
+    function loadEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch { return []; }
+    }
+
+    function saveEntries(entries) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch {}
+    }
+
+    function loadPrice() {
+      try {
+        return parseFloat(localStorage.getItem(PRICE_KEY)) || 0;
+      } catch { return 0; }
+    }
+
+    function savePriceValue(price) {
+      try { localStorage.setItem(PRICE_KEY, price.toString()); } catch {}
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function getMonthKey(dateStr) {
+      return dateStr.substring(0, 7);
+    }
+
+    function getMonthLabel(monthKey) {
+      const [y, m] = monthKey.split('-');
+      const d = new Date(parseInt(y), parseInt(m) - 1);
+      return d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    }
+
+    function getUniqueMonths() {
+      const entries = loadEntries();
+      const months = new Set(entries.map(e => getMonthKey(e.date)));
+      return Array.from(months).sort().reverse();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('[id^="tab-"]').forEach(s => s.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+
+      if (tab === 'history') { populateFilterMonths(); renderHistory(); }
+      if (tab === 'summary') { populateSummaryMonths(); renderSummary(); }
+      if (tab === 'add') updateTodaySummary();
+      if (tab === 'settings') document.getElementById('settingsPrice').value = loadPrice() || '';
+    }
+
+    function addEntry() {
+      const date = document.getElementById('entryDate').value;
+      const volume = parseFloat(document.getElementById('entryVolume').value);
+      const note = document.getElementById('entryNote').value.trim();
+
+      if (!date) { showToast('Please select a date'); return; }
+      if (!volume || volume <= 0) { showToast('Please enter a valid volume'); return; }
+
+      const entries = loadEntries();
+      entries.push({ id: Date.now(), date, volume, note });
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      saveEntries(entries);
+
+      document.getElementById('entryVolume').value = '';
+      document.getElementById('entryNote').value = '';
+      updateTodaySummary();
+      showToast('Entry added: ' + volume + ' L on ' + formatDate(date));
+    }
+
+    function deleteEntry(id) {
+      if (!confirm('Delete this entry?')) return;
+      const entries = loadEntries().filter(e => e.id !== id);
+      saveEntries(entries);
+      renderHistory();
+      showToast('Entry deleted');
+    }
+
+    function openEditModal(id) {
+      const entry = loadEntries().find(e => e.id === id);
+      if (!entry) return;
+      document.getElementById('editId').value = id;
+      document.getElementById('editDate').value = entry.date;
+      document.getElementById('editVolume').value = entry.volume;
+      document.getElementById('editNote').value = entry.note || '';
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('open');
+    }
+
+    function saveEdit() {
+      const id = parseInt(document.getElementById('editId').value);
+      const date = document.getElementById('editDate').value;
+      const volume = parseFloat(document.getElementById('editVolume').value);
+      const note = document.getElementById('editNote').value.trim();
+
+      if (!date || !volume || volume <= 0) { showToast('Invalid input'); return; }
+
+      const entries = loadEntries();
+      const idx = entries.findIndex(e => e.id === id);
+      if (idx === -1) return;
+      entries[idx] = { ...entries[idx], date, volume, note };
+      entries.sort((a, b) => b.date.localeCompare(a.date));
+      saveEntries(entries);
+      closeEditModal();
+      renderHistory();
+      showToast('Entry updated');
+    }
+
+    function populateFilterMonths() {
+      const sel = document.getElementById('filterMonth');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">All months</option>';
+      getUniqueMonths().forEach(m => {
+        sel.innerHTML += '<option value="' + m + '"' + (m === current ? ' selected' : '') + '>' + getMonthLabel(m) + '</option>';
+      });
+    }
+
+    function populateSummaryMonths() {
+      const sel = document.getElementById('summaryMonth');
+      const current = sel.value;
+      const months = getUniqueMonths();
+      sel.innerHTML = '';
+      if (months.length === 0) {
+        sel.innerHTML = '<option value="">No data</option>';
+        return;
+      }
+      const now = new Date();
+      const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      months.forEach(m => {
+        const selected = current ? m === current : m === currentMonth;
+        sel.innerHTML += '<option value="' + m + '"' + (selected ? ' selected' : '') + '>' + getMonthLabel(m) + '</option>';
+      });
+      if (!current && !months.includes(currentMonth) && months.length > 0) {
+        sel.selectedIndex = 0;
+      }
+    }
+
+    function renderHistory() {
+      const entries = loadEntries();
+      const month = document.getElementById('filterMonth').value;
+      const from = document.getElementById('filterFrom').value;
+      const to = document.getElementById('filterTo').value;
+      const minL = parseFloat(document.getElementById('filterMinL').value) || 0;
+      const maxL = parseFloat(document.getElementById('filterMaxL').value) || Infinity;
+      const price = loadPrice();
+
+      const filtered = entries.filter(e => {
+        if (month && getMonthKey(e.date) !== month) return false;
+        if (from && e.date < from) return false;
+        if (to && e.date > to) return false;
+        if (e.volume < minL) return false;
+        if (e.volume > maxL) return false;
+        return true;
+      });
+
+      const list = document.getElementById('entryList');
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="icon">&#128166;</div><div>No entries found</div></div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(e => {
+        const cost = price ? ' &#8377;' + (e.volume * price).toFixed(0) : '';
+        const noteHtml = e.note ? ' <span style="color:var(--text-muted);font-size:0.8rem">- ' + escapeHtml(e.note) + '</span>' : '';
+        return '<li class="entry-item">' +
+          '<div><div class="entry-volume">' + e.volume + ' L' + noteHtml + '</div>' +
+          '<div class="entry-date">' + formatDate(e.date) + '</div></div>' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span class="entry-cost">' + cost + '</span>' +
+          '<div class="entry-actions">' +
+          '<button class="btn-icon edit" onclick="openEditModal(' + e.id + ')" title="Edit">&#9998;</button>' +
+          '<button class="btn-icon delete" onclick="deleteEntry(' + e.id + ')" title="Delete">&#10005;</button>' +
+          '</div></div></li>';
+      }).join('');
+    }
+
+    function renderSummary() {
+      const month = document.getElementById('summaryMonth').value;
+      if (!month) {
+        document.getElementById('sumLiters').textContent = '0';
+        document.getElementById('sumCost').innerHTML = '&#8377;0';
+        document.getElementById('sumEntries').textContent = '0';
+        document.getElementById('sumAvg').textContent = '0';
+        document.getElementById('breakdownList').innerHTML = '';
+        return;
+      }
+
+      const entries = loadEntries().filter(e => getMonthKey(e.date) === month);
+      const price = loadPrice();
+      const totalL = entries.reduce((s, e) => s + e.volume, 0);
+      const totalCost = totalL * price;
+      const [y, m] = month.split('-').map(Number);
+      const daysInMonth = new Date(y, m, 0).getDate();
+
+      document.getElementById('sumLiters').textContent = totalL.toFixed(1);
+      document.getElementById('sumCost').innerHTML = '&#8377;' + totalCost.toFixed(0);
+      document.getElementById('sumEntries').textContent = entries.length;
+      document.getElementById('sumAvg').textContent = entries.length ? (totalL / daysInMonth).toFixed(1) : '0';
+
+      const byDay = {};
+      entries.forEach(e => {
+        byDay[e.date] = (byDay[e.date] || 0) + e.volume;
+      });
+
+      const sortedDays = Object.keys(byDay).sort();
+      const list = document.getElementById('breakdownList');
+      if (sortedDays.length === 0) {
+        list.innerHTML = '<div class="empty-state">No entries this month</div>';
+        return;
+      }
+
+      list.innerHTML = sortedDays.map(d => {
+        const vol = byDay[d];
+        const cost = price ? ' &#8377;' + (vol * price).toFixed(0) : '';
+        return '<li class="entry-item"><div><div class="entry-volume">' + vol + ' L</div>' +
+          '<div class="entry-date">' + formatDate(d) + '</div></div>' +
+          '<span class="entry-cost">' + cost + '</span></li>';
+      }).join('');
+    }
+
+    function updateTodaySummary() {
+      const today = new Date().toISOString().split('T')[0];
+      const entries = loadEntries().filter(e => e.date === today);
+      const price = loadPrice();
+      const totalL = entries.reduce((s, e) => s + e.volume, 0);
+      document.getElementById('todayLiters').textContent = totalL.toFixed(1);
+      document.getElementById('todayCost').innerHTML = '&#8377;' + (totalL * price).toFixed(0);
+    }
+
+    function savePrice() {
+      const price = parseFloat(document.getElementById('settingsPrice').value);
+      if (!price || price < 0) { showToast('Enter a valid price'); return; }
+      savePriceValue(price);
+      document.getElementById('priceInput').value = price;
+      showToast('Price saved: &#8377;' + price + '/L');
+    }
+
+    function showResetModal() {
+      const months = getUniqueMonths();
+      const opts = document.getElementById('resetOptions');
+      let html = '<div class="reset-option" onclick="resetAll()">' +
+        '<div class="title" style="color:var(--danger)">Reset All Data</div>' +
+        '<div class="desc">Delete all entries permanently</div></div>';
+
+      months.forEach(m => {
+        html += '<div class="reset-option" onclick="resetMonth(\'' + m + '\')">' +
+          '<div class="title">Reset ' + getMonthLabel(m) + '</div>' +
+          '<div class="desc">Delete all entries for this month</div></div>';
+      });
+
+      opts.innerHTML = html;
+      document.getElementById('resetModal').classList.add('open');
+    }
+
+    function closeResetModal() {
+      document.getElementById('resetModal').classList.remove('open');
+    }
+
+    function resetAll() {
+      if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+      saveEntries([]);
+      closeResetModal();
+      showToast('All data cleared');
+      switchTab('settings');
+    }
+
+    function resetMonth(monthKey) {
+      if (!confirm('Delete all entries for ' + getMonthLabel(monthKey) + '?')) return;
+      const entries = loadEntries().filter(e => getMonthKey(e.date) !== monthKey);
+      saveEntries(entries);
+      closeResetModal();
+      showToast(getMonthLabel(monthKey) + ' data cleared');
+      switchTab('settings');
+    }
+
+    function exportData() {
+      const data = { entries: loadEntries(), price: loadPrice() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'milk-tracker-export.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Data exported');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // Init
+    (function init() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('entryDate').value = today;
+
+      const price = loadPrice();
+      document.getElementById('priceInput').value = price || '';
+
+      document.getElementById('priceInput').addEventListener('change', function() {
+        const p = parseFloat(this.value);
+        if (p > 0) {
+          savePriceValue(p);
+          updateTodaySummary();
+        }
+      });
+
+      updateTodaySummary();
+    })();
+  </script>
+</body>
+</html>
