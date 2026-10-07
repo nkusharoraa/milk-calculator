@@ -1,6 +1,6 @@
 {
   "name": "Milk Tracker",
-  "short_name": "Milk",
+  "short_name": "Milk Tracker",
   "description": "Track daily milk consumption and calculate monthly costs",
   "start_url": "/",
   "display": "standalone",
