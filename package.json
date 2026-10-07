@@ -1,0 +1,9 @@
+{
+  "name": "milk-tracker",
+  "version": "1.0.0",
+  "description": "Track daily milk consumption and calculate monthly costs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
