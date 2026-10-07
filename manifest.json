@@ -2,7 +2,7 @@
   "name": "Milk Tracker",
   "short_name": "Milk Tracker",
   "description": "Track daily milk consumption and calculate monthly costs",
-  "start_url": "/",
+  "start_url": "/milk-calculator/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#1e40af",
